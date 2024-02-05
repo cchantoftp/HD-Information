@@ -62,6 +62,8 @@ After running the script, a CSV file named ec2_disk_usage.csv will be created in
 
 # Notes
 Make sure your AWS IAM user has the necessary permissions to describe EC2 instances and volumes.
+Doc here
+https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/install-CloudWatch-Agent-on-EC2-Instance.html
 
 Replace 'your_region' with the actual AWS region where your EC2 instances are located.
 
