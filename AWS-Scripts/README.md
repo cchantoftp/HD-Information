@@ -38,6 +38,7 @@ The script will retrieve disk usage information for all your EC2 instances in th
 Install CloudWatch Agent (Note)
 
 If the script is unable to retrieve used and available disk space data, it may be because the CloudWatch Agent is not installed and configured on your EC2 instances. To collect detailed disk metrics, consider installing and configuring the CloudWatch Agent on your EC2 instances. You can find installation instructions in the AWS documentation.
+https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/install-CloudWatch-Agent-on-EC2-Instance.html
 
 # Example Output
 mathematica
