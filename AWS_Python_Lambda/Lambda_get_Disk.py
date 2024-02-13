@@ -6,12 +6,16 @@ def lambda_handler(event, context):
     region = 'us-east-1'
     s3_bucket_name = 's3-bucket-name'
 
+
     # Create Boto3 clients for EC2 and S3
     ec2_client = boto3.client('ec2', region_name=region)
     s3_client = boto3.client('s3', region_name=region)
 
     # Define the instance IDs to target
-    instance_ids = ['i-06a08e6c6f523e971', 'i-096d731bc257e3feb']
+    instance_ids = ['i-', 'i-']
+
+   # Get all EC2 instances in the specified region
+   # instances = ec2_client.describe_instances()
 
     # Initialize dictionary to store disk information
     disk_info = {}

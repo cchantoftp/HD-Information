@@ -71,3 +71,52 @@ Replace 'your_region' with the actual AWS region where your EC2 instances are lo
 Ensure that Boto3 is correctly installed and Python 3.x is used to run the script.
 
 If detailed disk usage data is missing, consider installing and configuring the CloudWatch Agent on your EC2 instances as described in step 5.
+
+
+# SSM configuration to grant all your ec2 into region  cloudwatch agent or ssm agent
+
+Please make sure thaht you configurte it before apply the python script
+
+
+
+
+# Roles Configuration
+To execute the actions performed by the script, such as describing EC2 instances, executing commands on instances using AWS Systems Manager (SSM), and putting objects into an S3 bucket, the IAM roles assigned to the Lambda function need specific permissions. Here's a breakdown of the required IAM policies:
+
+Describe EC2 Instances:
+
+The Lambda function needs permission to describe EC2 instances in the specified region. You can use the ec2:DescribeInstances action.
+Example IAM policy statement:
+json
+Copy code
+{
+    "Effect": "Allow",
+    "Action": "ec2:DescribeInstances",
+    "Resource": "*"
+}
+Execute Commands with SSM:
+
+The Lambda function needs permission to execute commands on EC2 instances using AWS Systems Manager (SSM). This includes actions like ssm:SendCommand, ssm:GetCommandInvocation, etc.
+Example IAM policy statement:
+json
+Copy code
+{
+    "Effect": "Allow",
+    "Action": [
+        "ssm:SendCommand",
+        "ssm:GetCommandInvocation"
+    ],
+    "Resource": "*"
+}
+Put Object into S3 Bucket:
+
+The Lambda function needs permission to put objects into the specified S3 bucket. Use the s3:PutObject action.
+Example IAM policy statement:
+json
+Copy code
+{
+    "Effect": "Allow",
+    "Action": "s3:PutObject",
+    "Resource": "arn:aws:s3:::s3-bucket-name/*"
+}
+Ensure that these policies are attached to the IAM role associated with the Lambda function. You can create a custom IAM policy combining these statements or attach separate policies with specific permissions based on your organization's security requirements. Additionally, always follow the principle of least privilege, granting only the permissions necessary for the Lambda function to perform its intended actions.
