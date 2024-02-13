@@ -1,0 +1,10 @@
+Instance ID,Instance Type,Instance State,Root Volume Size (GB),Used Space (GB),Available Space (GB)
+i-0f7017e959b8eb43f,t3a.2xlarge,running,100,0,100
+i-07eb2130c00045eb1,t3a.2xlarge,running,100,0,100
+i-0b76d3ed07d688ff3,t3a.2xlarge,running,100,0,100
+i-06a08e6c6f523e971,t2.micro,stopped,8,0,8
+i-0f14f623628f2abb8,t2.micro,running,8,0,8
+i-064f7120df413bd6b,t3a.2xlarge,running,100,0,100
+i-0f7bdcd20ca6fb587,t3a.2xlarge,running,100,0,100
+i-096d731bc257e3feb,t2.micro,stopped,8,0,8
+i-072fb395725542a03,t3a.2xlarge,running,100,0,100
