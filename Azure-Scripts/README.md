@@ -24,7 +24,7 @@ Before using this script, ensure that you have the following prerequisites set u
 5. Run the script by executing the following command:
 
    ```powershell
-   ./vm_disk_inventory.ps1
+   ./bothLinux-Windows.ps1
 The script will gather information about the disks of all VMs in the specified resource group, including OS disks and data disks. It will also retrieve disk information from both Linux and Windows VMs.
 
 The collected data will be exported to a CSV file named as specified in the $outputCsv variable.
