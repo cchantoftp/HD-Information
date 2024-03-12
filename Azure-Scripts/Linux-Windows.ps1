@@ -1,97 +1,66 @@
-#az login
+# Define the script to run on each Windows VM
+$windowsScriptToRun = "Get-Volume | Format-List; Get-WmiObject -Class Win32_OperatingSystem | Select-Object Caption, Version, OSArchitecture"
 
-# Set your Azure subscription
-#$subscriptionId = "b34abaea-961b-4fc8-8e8b-38118036e83b"
-#az account set --subscription $subscriptionId
+# Define the script to run on each Linux VM
+$linuxScriptToRun = "df -h"
 
-# Variables
-$outputCsv = "1vm_disk_inventory.csv"
-
-# Function to get disk info and usage from VM's guest OS
-function Get-GuestOSDiskInfo {
-    param (
-        $vmName,
-        $osType,
-        $resourceGroupName
-    )
-
-    if ($osType -eq "Linux") {
-        # Run a shell command to get disk usage information
-        $diskInfo = az vm run-command invoke -g $resourceGroupName -n $vmName --command-id RunShellScript --scripts "df -h" --query "value[0].message" | Out-String
-    } else {
-        # Run a PowerShell command to get disk usage information
-        $diskInfo = az vm run-command invoke -g $resourceGroupName -n $vmName --command-id RunPowerShellScript --scripts "Get-Volume | Format-List" --query "value[0].message" | Out-String
-    }
-
-    # Remove extra line breaks and spaces
-    $diskInfo = $diskInfo -replace '\r?\n', ' ' -replace '\s+', ' '
-
-    return $diskInfo.Trim()
-}
-
-# Get all resource groups in the subscription
+# Get a list of resource groups
 $resourceGroups = az group list --query "[].name" -o tsv
 
-# Array to hold all data
-$allData = @()
+# Iterate over each resource group
+foreach ($rg in $resourceGroups) {
+    Write-Host "Running script on VMs in resource group: $rg"
 
-foreach ($resourceGroupName in $resourceGroups) {
-    Write-Host "Checking VMs in resource group: $resourceGroupName"
-    # Getting VM details in each resource group
-    $vms = az vm list -g $resourceGroupName --query "[].{Name:name, OsType:storageProfile.osDisk.osType}" | ConvertFrom-Json
+    # Get a list of Windows VMs in the current resource group
+    $windowsVMs = az vm list --resource-group $rg --query "[?storageProfile.osDisk.osType=='Windows'].name" -o tsv | ForEach-Object { $_.Trim() }
 
-    foreach ($vm in $vms) {
-        $vmName = $vm.Name
-        $osType = $vm.OsType
+    # Iterate over each Windows VM in the current resource group
+    foreach ($vm in $windowsVMs) {
+        Write-Host "Running script on Windows VM: $vm in resource group: $rg"
 
-        Write-Host "Checking VM: $vmName in resource group: $resourceGroupName"
+        # Run the script on the Windows VM using Azure CLI
+        $result = az vm run-command invoke --resource-group $rg --name $vm --command-id RunPowerShellScript --scripts $windowsScriptToRun | ConvertFrom-Json
 
-        try {
-            # Get VM instance view to check state
-            $vmState = az vm get-instance-view -g $resourceGroupName -n $vmName --query "instanceView.statuses[?code=='PowerState/running'].displayStatus" -o tsv
-
-            if ($vmState -eq "VM running") {
-                # Get Azure Disk Details
-                # Fetching the ID of the OS disk and data disks from the VM object
-                $osDiskId = az vm show -g $resourceGroupName -n $vmName --query "storageProfile.osDisk.managedDisk.id" -o tsv
-                $dataDisksIds = az vm show -g $resourceGroupName -n $vmName --query "storageProfile.dataDisks[].managedDisk.id" -o tsv
-
-                # Combining OS and data disks IDs into an array
-                $diskIds = @($osDiskId) + @($dataDisksIds)
-
-                # Get Guest OS Disk Details
-                $osDiskInfo = Get-GuestOSDiskInfo -vmName $vmName -osType $osType -resourceGroupName $resourceGroupName
-
-                foreach ($diskId in $diskIds) {
-                    # Get details for each disk using its ID
-                    if (-not [string]::IsNullOrWhiteSpace($diskId)) {
-                        $diskDetails = az disk show --ids $diskId --query "{Name:name, DiskSizeGB:diskSizeGb, DiskType:sku.name}" | ConvertFrom-Json
-
-                        # Construct the data object for each disk
-                        $dataObj = New-Object PSObject -Property @{
-                            DiskName          = $diskDetails.Name
-                            AzureDiskId       = $diskId
-                            AzureDiskSizeGB   = $diskDetails.DiskSizeGB
-                            OSDiskInfo        = if ($osDiskId -eq $diskId) { $osDiskInfo } else { "" }
-                            ResourceGroupName = $resourceGroupName
-                            VMName            = $vmName
-                            DiskType          = if ($osDiskId -eq $diskId) { "OS Disk" } else { "Data Disk" }
-                            AzureDiskType     = $diskDetails.DiskType
-                        }
-
-                        # Add the data object to the array of all data
-                        $allData += $dataObj
-                    }
+        if ($result.value) {
+            # Extract and format the relevant information from the result
+            $output = $result.value.message -split "`n" | Where-Object { $_ -match ': ' } | ForEach-Object {
+                $key, $value = $_ -split ': ', 2
+                if ($key.Trim() -eq "Size" -or $key.Trim() -eq "SizeRemaining") {
+                    $value = [double]($value.Trim() -replace ',', '') / 1GB
+                    $value = [math]::Round($value, 2)
+                    $value = "$value GB"
                 }
-            } else {
-                # Output when VM is not running
-                Write-Host "Skipping VM '$vmName' in resource group '$resourceGroupName' as it is not running."
+                [PSCustomObject]@{
+                    Key = $key.Trim()
+                    Value = $value.Trim()
+                }
             }
-        } catch {
-            Write-Host "Failed to retrieve disk information for VM '$vmName' in resource group '$resourceGroupName'."
+
+            # Write the output to windows.txt
+            $output | Out-File -Append -FilePath "windows.txt" -Encoding utf8
+        } else {
+            Write-Host "Skipping Windows VM '$vm' in resource group '$rg' as it is not running or set to run."
+        }
+    }
+
+    # Get a list of Linux VMs in the current resource group
+    $linuxVMs = az vm list --resource-group $rg --query "[?storageProfile.osDisk.osType=='Linux'].name" -o tsv | ForEach-Object { $_.Trim() }
+
+    # Iterate over each Linux VM in the current resource group
+    foreach ($vm in $linuxVMs) {
+        Write-Host "Running script on Linux VM: $vm in resource group: $rg"
+
+        # Run the script on the Linux VM using Azure CLI
+        $result = az vm run-command invoke --resource-group $rg --name $vm --command-id RunShellScript --scripts $linuxScriptToRun | ConvertFrom-Json
+
+        if ($result.value) {
+            # Extract and format the relevant information from the result
+            $output = $result.value.message
+
+            # Write the output to linux.txt
+            $output | Out-File -Append -FilePath "linux.txt" -Encoding utf8
+        } else {
+            Write-Host "Skipping Linux VM '$vm' in resource group '$rg' as it is not running or set to run."
         }
     }
 }
-
-# Export to CSV (ensure you have permissions to write to the location)
-$allData | Export-Csv -Path ./$outputCsv -NoTypeInformation
