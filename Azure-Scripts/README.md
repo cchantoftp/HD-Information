@@ -20,7 +20,7 @@ Modify the script's variables, such as $resourceGroupName, to match your Azure e
 Run the script by executing the following command:
 
 powershell
-Copy code
+
 ./Linux-Windows.ps1
 The script will gather information about the disks of all VMs in the specified resource group, including OS disks and data disks. It will then export the information to separate text files named "windows.txt" and "linux.txt" for Windows and Linux VMs, respectively.
 
