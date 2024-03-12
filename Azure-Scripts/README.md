@@ -1,14 +1,14 @@
-Azure VM Disk Inventory Script
+#Azure VM Disk Inventory Script
 This PowerShell script is designed to gather information about the disks of Azure Virtual Machines (VMs), including both Linux and Windows VMs. It uses Azure CLI commands to retrieve data and exports the information to separate text files for Windows and Linux VMs. The script can be run using the Azure CLI on a local machine.
 
-Prerequisites
+#Prerequisites
 Before using this script, ensure that you have the following prerequisites set up:
 
 Azure CLI: Install and configure the Azure CLI on your local machine. You can download it from here.
 
 Azure Subscription: Make sure you are logged into the correct Azure subscription and have the necessary permissions to access and query VM resources.
 
-Usage
+#Usage
 Clone or download the repository to your local machine.
 
 Open a PowerShell terminal.
@@ -26,7 +26,7 @@ The script will gather information about the disks of all VMs in the specified r
 
 You can now review the disk information in the generated text files.
 
-Output Format
+#Output Format
 The information in the generated text files includes the following columns:
 
 VMName: The name of the Azure Virtual Machine.
