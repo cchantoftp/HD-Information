@@ -1,4 +1,4 @@
-#Documentation for PowerShell Script to Collect Disk and Volume Information from VMs
+# Documentation for PowerShell Script to Collect Disk and Volume Information from VMs
 #Overview
 This PowerShell script is designed to collect and export disk and volume information from virtual machines (VMs) across multiple resource groups in Azure. It supports both Windows and Linux VMs, extracting specific details such as disk size, type, and volume health status, then compiles this information into a CSV file for easy analysis and reporting.
 
