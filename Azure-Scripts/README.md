@@ -1,18 +1,18 @@
-Documentation for PowerShell Script to Collect Disk and Volume Information from VMs
-Overview
+#Documentation for PowerShell Script to Collect Disk and Volume Information from VMs
+#Overview
 This PowerShell script is designed to collect and export disk and volume information from virtual machines (VMs) across multiple resource groups in Azure. It supports both Windows and Linux VMs, extracting specific details such as disk size, type, and volume health status, then compiles this information into a CSV file for easy analysis and reporting.
 
-Prerequisites
+#Prerequisites
 Azure CLI: The script uses Azure CLI commands to interact with Azure resources. Ensure Azure CLI is installed and configured with the necessary permissions to list and access VMs and disks.
 PowerShell: The script is written for PowerShell. Ensure you have PowerShell installed on your system.
-How to Use the Script
+#How to Use the Script
 Open PowerShell: Start by opening a PowerShell window. You may need to run PowerShell as an Administrator depending on your system's configuration.
 
 Login to Azure: Ensure you are logged into your Azure account using the Azure CLI by running az login. Follow the prompts to complete the login process.
 
 Run the Script: Copy the script into a PowerShell script file (e.g., CollectVMInfo.ps1) and execute it in your PowerShell window by navigating to the script's directory and running .\CollectVMInfo.ps1.
 
-Script Workflow
+#Script Workflow
 Define Scripts for VMs: The script sets commands to run on Windows and Linux VMs to collect volume and operating system information.
 
 List Resource Groups: It lists all Azure resource groups in your subscription.
