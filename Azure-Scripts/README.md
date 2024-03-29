@@ -33,7 +33,7 @@ Disk Name
 Disk Size (in GB)
 Disk ID
 Additional Information specific to OS type
-Important Notes
+# Important Notes
 Ensure you have the correct permissions to query and manage Azure VMs and disks.
 The script interacts with Azure resources through Azure CLI commands executed in a PowerShell environment.
 It's designed to accommodate both Windows and Linux VMs by adapting the commands and parsing logic accordingly.
