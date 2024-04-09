@@ -29,7 +29,7 @@ foreach ($rg in $resourceGroups) {
     Write-Host "Processing resource group: $rg"
 
     # Get a list of all VMs in the current resource group
-    $vms = az vm list --resource-group $rg --query "[].{name: name, osType: storageProfile.osDisk.osType}" -o json | ConvertFrom-Json
+    $vms = az vm list --resource-group $rg --query "[].{name: name, osType: storageProfile.osDisk.osType, azureRegion: location}" -o json | ConvertFrom-Json
 
     foreach ($vm in $vms) {
         Write-Host "Processing VM: $($vm.name) in resource group: $rg"
@@ -68,6 +68,7 @@ foreach ($rg in $resourceGroups) {
                     SizeRemainingGB   = $sizeRemainingGB
                     HealthStatus      = $properties['HealthStatus']
                     OperationalStatus = $properties['OperationalStatus']
+                    DiskRegion        = 'N/A'  # Placeholder for disk region
                 }
             }
         } else {
@@ -80,7 +81,6 @@ foreach ($rg in $resourceGroups) {
             $dfLines = $dfOutput.value -split '\r?\n' | Where-Object { $_ -and $_ -notmatch '^(Filesystem|\s*$)' }
 
             $spaceInfo = @{}
-
 
             foreach ($line in $dfLines) {
                 # Splitting the line into columns, expecting 7 columns based on the df command output format
@@ -98,7 +98,6 @@ foreach ($rg in $resourceGroups) {
                     }
                 }
             }
-
 
             $lines = $volumeEntries -split '\r?\n' | Where-Object { $_ -and $_ -notmatch '^\s*NAME' }
 
@@ -137,16 +136,16 @@ foreach ($rg in $resourceGroups) {
                         SizeRemainingGB   = $availableSpace
                         HealthStatus      = 'N/A'
                         OperationalStatus = 'N/A'
+                        DiskRegion        = 'N/A'  # Placeholder for disk region
                     }
                 }
             }
             #wait-debugger
         }
         # Parse the volume information from $result.value.message
-        
 
         # Fetch disk details for the current VM (assuming $vmName and $resourceGroup are defined)
-        $diskIdsRaw = az vm show --resource-group $rg --name $vm.name --query "[storageProfile.osDisk.managedDisk.id, storageProfile.dataDisks[].managedDisk.id]" --output tsv
+        $diskIdsRaw = az vm show --resource-group $rg --name $vm.name --query "[storageProfile.osDisk.managedDisk.id, storageProfile.dataDisks[].managedDisk.id, location]" --output tsv
         $diskIds = $diskIdsRaw -split '\r?\n|\t| {2,}'
 
         $diskDetailsList = foreach ($diskId in $diskIds) {
@@ -158,6 +157,7 @@ foreach ($rg in $resourceGroups) {
                     DiskName     = $diskDetails.name
                     DiskSizeGB   = $diskDetails.diskSizeGB
                     DiskType     = $diskDetails.sku.name
+                    DiskRegion   = $diskDetails.location  # Adding DiskRegion property
                 }
             }
         }
@@ -167,7 +167,7 @@ foreach ($rg in $resourceGroups) {
 
         foreach ($volumeInfo in $volumeInfoList) {
             # Initially, create an output object for the volume
-            $outputObj = $volumeInfo | Select-Object @{Name='VMName';Expression={$vm.name}}, @{Name='ResourceGroup';Expression={$rg}}, UniqueId, DriveLetter, DriveType, FileSystem, FileSystemLabel, SizeGB, SizeRemainingGB, HealthStatus, OperationalStatus
+            $outputObj = $volumeInfo | Select-Object @{Name='VMName';Expression={$vm.name}}, @{Name='ResourceGroup';Expression={$rg}}, UniqueId, DriveLetter, DriveType, FileSystem, FileSystemLabel, SizeGB, SizeRemainingGB, HealthStatus, OperationalStatus, DiskRegion
 
             # Add placeholders for disk details to ensure the CSV structure is consistent
             $outputObj | Add-Member -NotePropertyName "DiskName" -NotePropertyValue "N/A"
@@ -196,6 +196,7 @@ foreach ($rg in $resourceGroups) {
                 DiskName       = $diskDetail.DiskName
                 DiskSizeGB     = $diskDetail.DiskSizeGB
                 DiskType       = $diskDetail.DiskType
+                DiskRegion     = $diskDetail.DiskRegion  # Using DiskRegion property
             }
 
             # Export the disk information to CSV
